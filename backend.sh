@@ -1,67 +1,58 @@
 #!/bin/bash
 
-# Exit on error
-set -e
-
-echo "🚀 Setting up backend... latest"
-
-# Create project folder and navigate into it
-mkdir -p backend && cd backend
-
-# Initialize npm
+# Step 1: Initialize a new Node.js project
+rm -rf package.json package-lock.json node_modules tsconfig.json
 npm init -y
 
-# Install latest stable dependencies
-npm install express mongoose cors dotenv bcrypt jsonwebtoken cookie-parser uuid zod
+# Step 2: Install dependencies (latest stable versions)
+npm install express mongoose dotenv cors bcrypt jsonwebtoken cookie-parser
+npm install -D typescript ts-node-dev @types/node @types/express @types/mongoose @types/jsonwebtoken @types/bcrypt
 
-# Install latest stable dev dependencies
-npm install -D typescript ts-node-dev @types/express @types/mongoose @types/cors @types/node @types/jsonwebtoken @types/bcrypt @types/cookie-parser
-
-# Initialize TypeScript configuration
+# Step 3: Overwrite tsconfig.json
 npx tsc --init
-
-# Modify tsconfig.json for ES module support
 npx json -I -f tsconfig.json -e '
-  this.compilerOptions.module="NodeNext";
-  this.compilerOptions.moduleResolution="NodeNext";
-  this.compilerOptions.outDir="dist";
-  this.compilerOptions.rootDir="src";
-  this.compilerOptions.strict=true;
-  this.compilerOptions.esModuleInterop=true;
-  this.compilerOptions.forceConsistentCasingInFileNames=true;
-  this.compilerOptions.skipLibCheck=true;
-  this.include=["src"];
-'
+this.compilerOptions={
+  "target": "ES2020",
+  "module": "ESNext",
+  "rootDir": "./src",
+  "outDir": "./dist",
+  "strict": true,
+  "moduleResolution": "Node",
+  "esModuleInterop": true,
+  "forceConsistentCasingInFileNames": true,
+  "skipLibCheck": true
+}'
 
-# Modify package.json for ESM and add scripts
-npx json -I -f package.json -e '
-  this.type="module";
-  this.scripts={
-    "dev": "ts-node-dev --loader ts-node/esm --respawn src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
-  }
-'
+# Step 4: Create basic folder structure
+mkdir -p src/controllers src/routes src/models src/middleware src/config
+touch src/index.ts src/config/db.ts src/routes/auth.ts src/controllers/authController.ts
 
-# Create source directory and index file
-mkdir -p src
-cat <<EOT > src/index.ts
+# Step 5: Add basic Express server (ESM syntax)
+cat > src/index.ts <<EOF
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("🚀 Backend is running...");
-});
+app.get("/", (req, res) => res.send("API is running..."));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(\`🔥 Server running on port \${PORT}\`));
-EOT
+app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
+EOF
 
-echo "✅ Backend setup complete! Run 'npm run dev' to start the server."
+# Step 6: Add scripts to package.json
+npx json -I -f package.json -e '
+this.scripts={
+  "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+  "build": "tsc",
+  "start": "node dist/index.js"
+}'
+
+echo "✅ Backend setup complete!"
