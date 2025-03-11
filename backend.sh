@@ -1,23 +1,34 @@
 #!/bin/bash
 
-# Create project directory
-mkdir backend && cd backend
+# Exit script on error
+set -e
 
-# Initialize package.json
+# Create project folder and initialize npm
+mkdir backend && cd backend
 npm init -y
 
-# Enable ESM (ES Modules) in package.json
-jq '. + { "type": "module" }' package.json > temp.json && mv temp.json package.json
-
 # Install dependencies
-npm install express mongoose dotenv cors jsonwebtoken bcrypt cookie-parser zod uuid resend
+npm install express mongoose cors dotenv bcrypt jsonwebtoken cookie-parser uuid zod
 
 # Install dev dependencies
-npm install -D typescript ts-node-dev @types/node @types/express @types/jsonwebtoken @types/bcrypt @types/cookie-parser @types/cors
+npm install -D typescript ts-node-dev @types/express @types/mongoose @types/cors @types/node @types/jsonwebtoken @types/bcrypt @types/cookie-parser
 
-# Setup TypeScript config
+# Modify package.json to use ESM (ES6 Modules) and add scripts
+npx json -I -f package.json -e '
+  this.type="module";
+  this.scripts={
+    "dev": "ts-node-dev --loader ts-node/esm --respawn src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+'
+
+# Initialize TypeScript
+npx tsc --init
+
+# Modify tsconfig.json for ESM
 npx json -I -f tsconfig.json -e '
-  this.compilerOptions = {
+  this.compilerOptions={
     "target": "ES6",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -30,28 +41,24 @@ npx json -I -f tsconfig.json -e '
   }
 '
 
-# Create basic folder structure
-mkdir src && mkdir src/controllers src/models src/routes src/middleware
-
-# Create entry file
-cat <<EOF > src/index.ts
-import express from "express";
+# Create folder structure
+mkdir src
+touch src/index.ts
+echo 'import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
-const app = express();
 
+const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Hello, ESM with TypeScript!");
+  res.send("Backend is running...");
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
-EOF
-
-# Add scripts in package.json
-jq '.scripts += { "dev": "ts-node-dev --loader ts-node/esm --respawn src/index.ts" }' package.json > temp.json && mv temp.json package.json
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));' > src/index.ts
 
 echo "✅ Backend setup complete! Run 'npm run dev' to start the server."
