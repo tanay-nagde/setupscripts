@@ -1,14 +1,18 @@
 #!/bin/bash
 
-# Step 1: Initialize a new Node.js project
+# Step 1: Create backend directory and navigate into it
+mkdir -p backend
+cd backend || exit
+
+# Step 2: Initialize a new Node.js project
 
 npm init -y
 
-# Step 2: Install dependencies (latest stable versions)
+# Step 3: Install dependencies (latest stable versions)
 npm install express mongoose dotenv cors bcrypt jsonwebtoken cookie-parser
 npm install -D typescript ts-node-dev @types/node @types/express @types/mongoose @types/jsonwebtoken @types/bcrypt
 
-# Step 3: Overwrite tsconfig.json
+# Step 4: Overwrite tsconfig.json
 npx tsc --init
 npx json -I -f tsconfig.json -e '
 this.compilerOptions={
@@ -23,11 +27,13 @@ this.compilerOptions={
   "skipLibCheck": true
 }'
 
-# Step 4: Create basic folder structure
+# Step 5: Create basic folder structure
 mkdir -p src/controllers src/routes src/models src/middleware src/config
+
+# Step 6: Create necessary files
 touch src/index.ts src/config/db.ts src/routes/auth.ts src/controllers/authController.ts
 
-# Step 5: Add basic Express server (ESM syntax)
+# Step 7: Add basic Express server (ESM syntax)
 cat > src/index.ts <<EOF
 import express from "express";
 import dotenv from "dotenv";
@@ -47,7 +53,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
 EOF
 
-# Step 6: Add scripts to package.json
+# Step 8: Add scripts to package.json
 npx json -I -f package.json -e '
 this.scripts={
   "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -55,4 +61,4 @@ this.scripts={
   "start": "node dist/index.js"
 }'
 
-echo "✅ Backend setup complete!"
+echo "✅ Backend setup complete in the 'backend' folder!"
