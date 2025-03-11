@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Step 1: Initialize a new Node.js project
-rm -rf package.json package-lock.json node_modules tsconfig.json
+
 npm init -y
 
 # Step 2: Install dependencies (latest stable versions)
